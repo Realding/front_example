@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+
+    <title>Document</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" id="flat-fonts-css"
+        href="https://fonts.googleapis.com/css?family=Amatic+SC%7CRoboto:400,700%7CRoboto+Slab%7CRoboto+Condensed"
+        media="all">
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div id="nav" class="nav">
+                <div class="nav-brand" :herf="nav.brand.herf">{{ nav.brand.name }}</div>
+                <div class="nav-item" :herf="item.herf" v-for="item in nav.items">{{ item.name }}</div>
+            </div>
+        </div>
+        <div class="post" id="post">
+            <div id="library" class="post-left-side">
+                <div class="list-group">
+                    <span class="list-group-item">
+                        <h4>{{ library.name }}</h4>
+                        {{ library.desc }}
+                    </span>
+                </div>
+                <div class="list-group">
+                    <a class="list-group-item">
+                        所有文章
+                    </a>
+                </div>
+                <div class="list-group library-toc">
+                    <a class="list-group-item" :herf="item.link" v-for="item in library.toc">
+                        {{ item.name }}
+                    </a>
+                </div>
+            </div>
+            <div class="post-container">
+                <div class="post-main">
+                    <div class="col-1"></div>
+                    <div class="col-10">
+                        <div class="max-1024-center">
+                            <div class="post-title">
+                                <h1>{{ post.title }}</h1>
+                                <!-- <hr> -->
+                                <div class="entry-meta">
+                                    <span class="entry-date">
+                                        <a>
+                                            <time class="entry-date published" datetime="2019-11-14T14:41:44+08:00"
+                                                itemprop="datepublished">2019年11月14日</time>
+                                        </a>
+                                    </span> by <span class="author vcard" itemscope="" itemprop="author"
+                                        itemtype="http://schema.org/Person">
+                                        <a class="url fn n" href="#" rel="author" itemprop="url">
+                                            <span itemprop="name">admin</span>
+                                        </a>
+                                    </span>
+                                    <span class="sep">·</span>
+                                    <span class="comments-link">
+                                        <a href="http://www.linux-dba.com/index.php/2019/11/133/#respond"
+                                            itemprop="discussionUrl">0评论</a>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="post-content">
+                                <div v-html="content">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-1"></div>
+                </div>
+            </div>
+            <div class="post-toc">
+                <div class="post-toc-header">文章目录</div>
+                <div class="post-toc-content">
+                    <ul>
+                        <li :data-target="item.link" v-for="item in post.toc">
+                            {{ item.name }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Import Vue 3 -->
+    <script src="https://unpkg.com/vue@next"></script>
+    <script src="https://unpkg.com/marked@0.3.6"></script>
+    <script src="https://unpkg.com/lodash@4.16.0"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        const Nav = {
+            data() {
+                return {
+                    nav: {
+                        brand: {
+                            name: "首页",
+                            herf: "/"
+                        },
+                        items: [
+                            {
+                                name: "博客",
+                                herf: "#"
+                            },
+                            {
+                                name: "归档",
+                                herf: "#"
+                            },
+                            {
+                                name: "关于",
+                                herf: "#"
+                            },
+
+                        ]
+                    },
+
+                }
+            }
+        }
+        Vue.createApp(Nav).mount("#nav");
+
+        function setTocOption(){
+            var renderer = new marked.Renderer();
+
+            var toc = [];
+
+            renderer.heading = function(text, level, raw) {
+                var anchor = this.options.headerPrefix + raw.toLowerCase().replace(/[^\w]+/g, '-');
+                toc.push({
+                    anchor: anchor,
+                    level: level,
+                    text: text
+                });
+                return '<h'
+                    + level
+                    + ' id="'
+                    + anchor
+                    + '">'
+                    + text
+                    + '</h'
+                    + level
+                    + '>\n';
+            };
+
+            marked.setOptions({
+                renderer: renderer
+            });
+
+            console.log(toc);
+        }
+
+        setTocOption();
+
+        const Post = {
+            data() {
+                return {
+
+
+                    library: {
+                        name: "相关连接",
+                        desc: "！",
+                        toc: [{
+                            name: "前端学习知识点",
+                            link: "#"
+                        }]
+                    },
+
+                    post: {
+                        title: "",
+                        md: "加载中……",
+                        toc: [{
+                            name: "Vue知识点",
+                            link: "#"
+                        }]
+                    }
+                }
+            },
+
+            computed: {
+                content() {
+                    return marked(this.post.md, { sanitize: true });
+                }
+            },
+
+            mounted () {
+                axios.get("http://127.0.0.1:3000/posts/1")
+                .then(response => (this.post.title = response.data.title, this.post.md  =response.data.md));
+            }
+        }
+
+        Vue.createApp(Post).mount("#post");
+
+        window.onload = function () {
+            console.log("loaded");
+        }
+    </script>
+</body>
+
+</html>
